@@ -1,0 +1,27 @@
+# Video. FP32-INT1, FP32-INT8 for all. on MS Surface tablet. Ubuntu.
+load time
+face: [[0.19715357]]
+facial: [[0.0768671]]
+head: [[0.09127665]]
+gaze: [[0.12808061]]
+----------------------
+avg preprocess input
+face: [0.00173935]
+facial: [0.0001359]
+head: [0.00013888]
+gaze: [5.48422837e-05]
+----------------------
+avg inference
+face: [0.02525558]
+facial: [0.00063369]
+head: [0.00226802]
+gaze: [0.00276765]
+----------------------
+avg preprocess output
+face: [0.00163692]
+facial: [0.00136796]
+head: [1.05164632e-05]
+gaze: [2.14576721e-06]
+----------------------
+
+Process finished with exit code 0
