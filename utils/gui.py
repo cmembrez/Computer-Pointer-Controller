@@ -11,6 +11,8 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
+from pathlib import Path
+
 class GuiPointerController:
     def __init__(self):
         # SHOW OUTPUT / GUI
@@ -38,58 +40,41 @@ class GuiPointerController:
         data_log = np.char.lstrip(data_log)
 
         face_data = data_log[data_log[:, 0] == 'Face', 1:]
-        face_load = face_data[face_data[:, 0] == 'model_load_time', 1:].astype(np.float)
+        face_load = face_data[face_data[:, 0] == 'model_load_time', 1:][0][0].astype(np.float).round(4)
         face_input = face_data[face_data[:, 0] == 'preprocess_input_time', 1:].astype(np.float)
         face_output = face_data[face_data[:, 0] == 'preprocess_output_time', 1:].astype(np.float)
         face_inference = face_data[face_data[:, 0] == 'inference_time', 1:].astype(np.float)
 
         facial_data = data_log[data_log[:, 0] == 'FacialLandmarks', 1:]
-        facial_load = facial_data[facial_data[:, 0] == 'model_load_time', 1:].astype(np.float)
+        facial_load = facial_data[facial_data[:, 0] == 'model_load_time', 1:][0][0].astype(np.float).round(4)
         facial_input = facial_data[facial_data[:, 0] == 'preprocess_input_time', 1:].astype(np.float)
         facial_output = facial_data[facial_data[:, 0] == 'preprocess_output_time', 1:].astype(np.float)
         facial_inference = facial_data[facial_data[:, 0] == 'inference_time', 1:].astype(np.float)
 
         head_data = data_log[data_log[:, 0] == 'HeadPose', 1:]
-        head_load = head_data[head_data[:, 0] == 'model_load_time', 1:].astype(np.float)
+        head_load = head_data[head_data[:, 0] == 'model_load_time', 1:][0][0].astype(np.float).round(4)
         head_input = head_data[head_data[:, 0] == 'preprocess_input_time', 1:].astype(np.float)
         head_output = head_data[head_data[:, 0] == 'preprocess_output_time', 1:].astype(np.float)
         head_inference = head_data[head_data[:, 0] == 'inference_time', 1:].astype(np.float)
 
         gaze_data = data_log[data_log[:, 0] == 'Gaze', 1:]
-        gaze_load = gaze_data[gaze_data[:, 0] == 'model_load_time', 1:].astype(np.float)
+        gaze_load = gaze_data[gaze_data[:, 0] == 'model_load_time', 1:][0][0].astype(np.float).round(4)
         gaze_input = gaze_data[gaze_data[:, 0] == 'preprocess_input_time', 1:].astype(np.float)
         gaze_output = gaze_data[gaze_data[:, 0] == 'preprocess_output_time', 1:].astype(np.float)
         gaze_inference = gaze_data[gaze_data[:, 0] == 'inference_time', 1:].astype(np.float)
 
-        print("load time")
-        print("face: {}".format(face_load))
-        print("facial: {}".format(facial_load))
-        print("head: {}".format(head_load))
-        print("gaze: {}".format(gaze_load))
+        nb_data_points=len(gaze_inference)
 
-        print("----------------------")
-        print("avg preprocess input")
-        print("face: {}".format(sum(face_input)/len(face_inference)))
-        print("facial: {}".format(sum(facial_input)/len(facial_inference)))
-        print("head: {}".format(sum(head_input) / len(head_inference)))
-        print("gaze: {}".format(sum(gaze_input) / len(gaze_inference)))
-
-        print("----------------------")
-        print("avg inference")
-        print("face: {}".format(sum(face_inference)/len(face_inference)))
-        print("facial: {}".format(sum(facial_inference)/len(facial_inference)))
-        print("head: {}".format(sum(head_inference) / len(head_inference)))
-        print("gaze: {}".format(sum(gaze_inference) / len(gaze_inference)))
-
-        print("----------------------")
-        print("avg preprocess output")
-        print("face: {}".format(sum(face_output)/len(face_inference)))
-        print("facial: {}".format(sum(facial_output)/len(facial_inference)))
-        print("head: {}".format(sum(head_output) / len(head_inference)))
-        print("gaze: {}".format(sum(gaze_output) / len(gaze_inference)))
-
-        print("----------------------")
-
+        print("(seconds)| load time \t | avg preprocess input \t | inference time \t | avg preprocess output")
+        print("face:\t | {} \t\t | {} \t\t\t\t\t | {} \t\t\t | {}".format(face_load, np.mean(face_input).round(4), np.mean(face_inference).round(4),
+                                      np.mean(face_output).round(4)))
+        print("facial:\t | {} \t\t | {} \t\t\t\t\t | {} \t\t\t | {}".format(facial_load, np.mean(facial_input).round(4), np.mean(facial_inference).round(4),
+                                      np.mean(facial_output).round(4)))
+        print("head:\t | {} \t\t | {} \t\t\t\t\t | {} \t\t\t | {}".format(head_load, np.mean(head_input).round(4), np.mean(head_inference).round(4),
+                                      np.mean(head_output).round(4)))
+        print("gaze:\t | {} \t\t | {} \t\t\t\t\t | {} \t\t\t | {}".format(gaze_load, np.mean(gaze_input).round(4), np.mean(gaze_inference).round(4),
+                                      np.mean(gaze_output).round(4)))
+        print("-"*100)
 
         '''
         plt.plot(face_inference)
@@ -101,9 +86,7 @@ class GuiPointerController:
 
 def main():
     basicGui = GuiPointerController()
-
     basicGui.analyze_benchmark_log()
-
 
 if __name__ == '__main__':
     main()

@@ -1,3 +1,5 @@
+#!/bin/python
+
 """
 This is the main file of the application Computer Pointer Controller.
 
@@ -38,37 +40,39 @@ def get_args():
     # setup the parser
     parser = argparse.ArgumentParser(
         description="Computer Pointer Controller APP: without any args, the app infers from the webcam on the CPU "
-                    "using FP32 models.")
+                    "using FP32 Face model and FP32-INT8 models.")
     # helper descriptions
-    i_desc = "The location of the input file. Default=0, for webcam."
-    d_desc = "The device name: CPU (default), GPU, MYRIAD (for VPU)."
+    itype_desc = "The type of input. 'video', 'image' or 'cam' for webcam. Default=cam"
+    ipath_desc = "The path to the input file. Default=0, for webcam."
+    d_desc = "The device name: CPU (default), GPU or MYRIAD (for VPU)."
 
     model_source_desc = "Represents a subfolder in the subfolder ./models where you store your models. Default='intel'."
 
     face_model_desc = "The name of the face detection model in the subfolder " \
-                      "./models/intel/<faceModel>/<facePrecision>/<faceModel>.extensions. " \
+                      "./models/<model_source>/<faceModel>/<facePrecision>/<faceModel>.extensions. " \
                       "Default=face-detection-adas-binary-0001 "
     face_precision_desc = "The model precision for face detection model (cf arg faceModel_desc). Default=FP32-INT1"
 
     facial_model_desc = "The name of the facial landmarks detection model in the subfolder " \
-                        "./models/intel/<facialModel>/<facialPrecision>/<facialModel_desc>.extensions. " \
+                        "./models/<model_source>/<facialModel>/<facialPrecision>/<facialModel_desc>.extensions. " \
                         "Default=landmarks-regression-retail-0009 "
     facial_precision_desc = "The model precision for facial landmarks detection model. Default=FP32"
 
     head_model_desc = "The path to the head pose estimation model in the subfolder " \
-                      "./models/intel/<headModel>/<headPrecision>/<headModel>.extensions. " \
+                      "./models/<model_source>/<headModel>/<headPrecision>/<headModel>.extensions. " \
                       "Default=head-pose-estimation-adas-0001 "
     head_precision_desc = "The model precision for head pose estimation model. Default=FP32"
 
     gaze_model_desc = "The path to the gaze estimation model in the subfolder " \
-                      "./models/intel/<gazeModel>/<gazePrecision>/<gazeModel>.extensions. " \
+                      "./models/<model_source>/<gazeModel>/<gazePrecision>/<gazeModel>.extensions. " \
                       "Default=gaze-estimation-adas-0002 "
     gaze_precision_desc = "The model precision for gaze estimation model. Default=FP32"
 
-    gui_desc = "Set to True to activate the graphic user interface (gui). Default=False."
+    gui_desc = "Set to True to activate the graphic user interface (GUI). Default=False."
 
     # create the arguments
-    parser.add_argument("-i", "--input", help=i_desc, default="/bin/demo.mp4", required=False)
+    parser.add_argument("-itype", "--inputtype", help=itype_desc, default='cam', required=False)
+    parser.add_argument("-ipath", "--inputpath", help=ipath_desc, default=0, required=False)
     parser.add_argument("-d", "--device", help=d_desc, default="CPU", required=False)
 
     parser.add_argument("-modelSource", help=model_source_desc, default="intel", required=False)
@@ -121,6 +125,11 @@ def main():
     # model loading time
     # input/output processing
     # model inference time
+    # log the model name and precision
+    loggers.benchmark.info("Face;{};{}".format(args.faceModel, args.facePrecision))
+    loggers.benchmark.info("Facial;{};{}".format(args.facialModel, args.facialPrecision))
+    loggers.benchmark.info("Head;{};{}".format(args.headModel, args.headPrecision))
+    loggers.benchmark.info("Gaze;{};{}".format(args.gazeModel, args.gazePrecision))
 
     # Load models
     start_time = time.time()
@@ -140,7 +149,7 @@ def main():
     loggers.benchmark.info("Gaze;model_load_time;{}".format(time.time()-start_time))
 
     # read input
-    feed = InputFeeder(input_type='video', input_file=str(project_path) + args.input)  # InputFeeder(input_type='cam')
+    feed = InputFeeder(input_type=args.inputtype, input_file=args.inputpath)
     feed.load_data()
     if not (feed.cap.isOpened()):
         loggers.main.critical("Could not open input device ({}). Exiting now...".format(feed.input_type))
