@@ -107,8 +107,7 @@ class HeadPoseEstimation:
 
     def predict(self, image):
         """
-        TODO: You will need to complete this method.
-        This method is meant for running predictions on the input image.
+        Running predictions on the input image.
         """
 
         # Preprocess INPUT (image)
