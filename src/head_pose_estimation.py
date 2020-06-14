@@ -14,7 +14,7 @@ The head_pose_estimation class has four methods
     preprocess_input(image)
     preprocess_output(outputs, image)
 """
-
+import openvino
 from openvino.inference_engine import IENetwork, IECore
 import cv2
 import math
@@ -52,10 +52,6 @@ class HeadPoseEstimation:
         self.input_shape = None
         self.outputs_names = None
         self.outputs_shapes = None
-
-        if self.extensions is None:
-            self.extensions = "/opt/intel/openvino/deployment_tools/inference_engine/lib/intel64/libcpu_extension_sse4.so"
-            self.loggers.main.info("HeadPoseEstimation: no extensions provided by user. Trying to add {}".format(self.extensions))
 
     def load_model(self):
         """
@@ -96,28 +92,7 @@ class HeadPoseEstimation:
             self.outputs_shapes.append(self.network.outputs[self.outputs_names[i]].shape)
 
         # Add any necessary extensions
-        try:
-            if "CPU" in self.device:
-                self.loggers.main.info("HeadPoseEstimation: CPU extensions not added.")
-                # self.plugin.add_extension(self.extensions, self.device)
-
-            # Get supported layers of the network
-            supported_layers = self.plugin.query_network(network=self.network, device_name=self.device)
-
-            # GPU extensions
-            if "GPU" in self.device:
-                supported_layers.update(self.plugin.query_network(self.network), 'CPU')
-
-            # Check unsupported layers
-            unsupported_layers = [layer for layer in self.network.layers.keys() if layer not in supported_layers]
-            if len(unsupported_layers) != 0:
-                self.loggers.main.warning("HeadPoseEstimation: there are unsupported layers: {}".format(unsupported_layers))
-                self.loggers.main.warning("HeadPoseEstimation: please add existing extension to the IECore if possible.")
-                exit(1)
-        except Exception as e:
-            self.loggers.main.error("HeadPoseEstimation: problem with extensions provided. Please re-check info provided.")
-            print("Ced's printing: ", e)
-            exit(1)
+        self.check_model()
 
         # Load the IENetwork into the plugin
         self.net_plugin = self.plugin.load_network(self.network, self.device)
@@ -154,7 +129,41 @@ class HeadPoseEstimation:
         return coords
 
     def check_model(self):
-        raise NotImplementedError
+        """
+        Checking the model for unsupported layers. and checking if openvino version < 2020 for CPU Extensions needs.
+        :return: void. info in main.log
+        """
+        try:
+            '''
+            openvino_version = int(openvino.__file__.split("/")[3].split("_")[1].split(".")[0])
+            if ("CPU" in self.device) and (openvino_version < 2020) and (self.extensions is None):
+                self.extensions = "/opt/intel/openvino/deployment_tools/inference_engine/lib/intel64/libcpu_extension_sse4.so"
+                self.plugin.add_extension(self.extensions, self.device)
+                self.loggers.main.info(
+                    "HeadPoseEstimation: no extensions provided by user. Added {}".format(self.extensions))
+            '''
+            # Get supported layers of the network
+            supported_layers = self.plugin.query_network(network=self.network, device_name=self.device)
+
+            # GPU extensions
+            '''
+            if "GPU" in self.device:
+                supported_layers.update(self.plugin.query_network(self.network), 'CPU')
+            '''
+
+            # Check unsupported layers
+            unsupported_layers = [layer for layer in self.network.layers.keys() if layer not in supported_layers]
+            if len(unsupported_layers) != 0:
+                self.loggers.main.warning(
+                    "HeadPoseEstimation: there are unsupported layers: {}".format(unsupported_layers))
+                self.loggers.main.warning(
+                    "HeadPoseEstimation: please add existing extension to the IECore if possible.")
+                exit(1)
+        except Exception as e:
+            self.loggers.main.error(
+                "HeadPoseEstimation: problem with extensions provided. Please re-check info provided.")
+            print("Ced's printing: ", e)
+            exit(1)
 
     def preprocess_input(self, image):
         """

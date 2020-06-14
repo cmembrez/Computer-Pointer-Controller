@@ -11,7 +11,7 @@ The facial_landmarks class has four methods
     preprocess_input(image)
     preprocess_output(outputs, image)
 """
-
+import openvino
 from openvino.inference_engine import IENetwork, IECore
 import cv2
 import time
@@ -50,11 +50,6 @@ class FacialLandmarks:
 
         self.outputs_detections = None
 
-        if self.extensions is None:
-            self.extensions = "/opt/intel/openvino/deployment_tools/inference_engine/lib/intel64" \
-                              "/libcpu_extension_sse4.so "
-            self.loggers.main.info("FacialLandmarks: no extensions provided by user. Trying to add {}".format(self.extensions))
-
     def load_model(self):
         """
         This method is for loading the model to the device specified by the user.
@@ -85,28 +80,7 @@ class FacialLandmarks:
         self.output_shape = self.network.outputs[self.output_name].shape
 
         # Add any necessary extensions
-        try:
-            if "CPU" in self.device:
-                self.loggers.main.info("FacialLandmarks: CPU extensions not added.")
-                # self.plugin.add_extension(self.extensions, self.device)
-
-            # Get supported layers of the network
-            supported_layers = self.plugin.query_network(network=self.network, device_name=self.device)
-
-            # GPU extensions
-            if "GPU" in self.device:
-                supported_layers.update(self.plugin.query_network(self.network), 'CPU')
-
-            # Check unsupported layers
-            unsupported_layers = [layer for layer in self.network.layers.keys() if layer not in supported_layers]
-            if len(unsupported_layers) != 0:
-                self.loggers.main.warning("FacialLandmarks: there are unsupported layers: {}".format(unsupported_layers))
-                self.loggers.main.warning("FacialLandmarks: please add existing extension to the IECore if possible.")
-                exit(1)
-        except Exception as e:
-            self.loggers.main.error("FacialLandmarks: problem with extensions provided. Please re-check info provided.")
-            print("Ced's printing: ", e)
-            exit(1)
+        self.check_model()
 
         # Load the IENetwork into the plugin
         self.net_plugin = self.plugin.load_network(self.network, self.device)
@@ -142,7 +116,39 @@ class FacialLandmarks:
         return self.outputs_detections[0], image_eyes
 
     def check_model(self):
-        raise NotImplementedError
+        """
+        Checking the model for unsupported layers. and checking if openvino version < 2020 for CPU Extensions needs.
+        :return: void. info is in main.log
+        """
+        try:
+            '''
+            openvino_version = int(openvino.__file__.split("/")[3].split("_")[1].split(".")[0])
+            if ("CPU" in self.device) and (openvino_version < 2020) and (self.extensions is None):
+                self.extensions = "/opt/intel/openvino/deployment_tools/inference_engine/lib/intel64/libcpu_extension_sse4.so"
+                self.plugin.add_extension(self.extensions, self.device)
+                self.loggers.main.info(
+                    "FacialLandmarks: no extensions provided by user. Added {}".format(self.extensions))
+            '''
+            # Get supported layers of the network
+            supported_layers = self.plugin.query_network(network=self.network, device_name=self.device)
+
+            # GPU extensions
+            '''
+            if "GPU" in self.device:
+                supported_layers.update(self.plugin.query_network(self.network), 'CPU')
+            '''
+
+            # Check unsupported layers
+            unsupported_layers = [layer for layer in self.network.layers.keys() if layer not in supported_layers]
+            if len(unsupported_layers) != 0:
+                self.loggers.main.warning(
+                    "FacialLandmarks: there are unsupported layers: {}".format(unsupported_layers))
+                self.loggers.main.warning("FacialLandmarks: please add existing extension to the IECore if possible.")
+                exit(1)
+        except Exception as e:
+            self.loggers.main.error("FacialLandmarks: problem with extensions provided. Please re-check info provided.")
+            print("Ced's printing: ", e)
+            exit(1)
 
     def preprocess_input(self, image):
         """

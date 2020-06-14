@@ -36,7 +36,8 @@ class GuiPointerController:
         try to get most info out of benchmark.log
         :return: void()  # print statements so far
         """
-        data_log = np.loadtxt("../log/benchmark.log", delimiter=";", usecols=(2, 3, 4), dtype='str')
+        project_path = Path(__file__).parent.parent.resolve()
+        data_log = np.loadtxt(str(project_path) + "/log/benchmark.log", delimiter=";", usecols=(2, 3, 4), dtype='str')
         data_log = np.char.lstrip(data_log)
 
         face_data = data_log[data_log[:, 0] == 'Face', 1:]
@@ -82,6 +83,7 @@ class GuiPointerController:
         plt.plot(face_input)
         plt.show()
         '''
+
 
 
 def main():

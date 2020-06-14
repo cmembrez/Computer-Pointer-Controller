@@ -20,7 +20,6 @@ import argparse
 import cv2
 import sys
 import time
-from pathlib import Path
 
 from src.face_detection import FaceDetection
 from src.facial_landmarks_detection import FacialLandmarks
@@ -98,7 +97,6 @@ def get_args():
 
 
 def main():
-    project_path = Path(__file__).parent.parent.resolve()
     # This will initiate two loggers that write to ../log/main.log, and /benchmark.log
     loggers = LogHelper()
     # Arguments from user
