@@ -1,4 +1,4 @@
-'''
+"""
 This is the main file of the application Computer Pointer Controller.
 
 0) we start by reading the arguments given by the user, if any.
@@ -10,69 +10,83 @@ This is the main file of the application Computer Pointer Controller.
     The latter will output towards mouse_controler.py in order to modify the user's mouse pointer position.
 
 There exists a subfolder ./models.
-Using the Intel OpenVINO Model Downloader, the models .bin and .xml files may be located in the subfolders ./models/intel/<model_name>/<model_precision>/
-'''
+Using the Intel OpenVINO Model Downloader,
+the models .bin and .xml files may be located in the subfolders ./models/intel/<model_name>/<model_precision>/
+"""
 
 import argparse
 import cv2
 import sys
 import time
+from pathlib import Path
 
-from IntelEdgeAI_IoTDeveloper.starter.src.face_detection import FaceDetection
-from IntelEdgeAI_IoTDeveloper.starter.src.facial_landmarks_detection import FacialLandmarks
-from IntelEdgeAI_IoTDeveloper.starter.src.head_pose_estimation import HeadPoseEstimation
-from IntelEdgeAI_IoTDeveloper.starter.src.gaze_estimation import GazeEstimation
+from src.face_detection import FaceDetection
+from src.facial_landmarks_detection import FacialLandmarks
+from src.head_pose_estimation import HeadPoseEstimation
+from src.gaze_estimation import GazeEstimation
+from src.input_feeder import InputFeeder
+from src.mouse_controller import MouseController
 
-from IntelEdgeAI_IoTDeveloper.starter.src.input_feeder import InputFeeder
-from IntelEdgeAI_IoTDeveloper.starter.src.mouse_controller import MouseController
-
-from IntelEdgeAI_IoTDeveloper.starter.utils.log_helper import LogHelper
+from utils.log_helper import LogHelper
 
 
 def get_args():
-    '''
+    """
     Gets the arguments from the command line
     :return: parsed arguments
-    '''
+    """
     # setup the parser
     parser = argparse.ArgumentParser(
-        description="Computer Pointer Controller APP: without any args, the app infers from the webcam on the CPU using FP32 models.")
+        description="Computer Pointer Controller APP: without any args, the app infers from the webcam on the CPU "
+                    "using FP32 models.")
     # helper descriptions
     i_desc = "The location of the input file. Default=0, for webcam."
     d_desc = "The device name: CPU (default), GPU, MYRIAD (for VPU)."
 
-    modelSource_desc = "Represents a subfolder in the subfolder ./models where you store your models. Default='intel'."
+    model_source_desc = "Represents a subfolder in the subfolder ./models where you store your models. Default='intel'."
 
-    faceModel_desc = "The name of the face detection model in the subfolder ./models/intel/<faceModel>/<facePrecision>/<faceModel>.extensions. Default=face-dtection-adas-binary-0001"
-    facePrecision_desc = "The model precision for face detection model (cf arg faceModel_desc). Default=FP32-INT1"
+    face_model_desc = "The name of the face detection model in the subfolder " \
+                      "./models/intel/<faceModel>/<facePrecision>/<faceModel>.extensions. " \
+                      "Default=face-detection-adas-binary-0001 "
+    face_precision_desc = "The model precision for face detection model (cf arg faceModel_desc). Default=FP32-INT1"
 
-    facialModel_desc = "The name of the facial landmarks detection model in the subfolder ./models/intel/<facialModel>/<facialPrecision>/<facialModel_desc>.extensions. Default=landmarks-regression-retail-0009"
-    facialPrecision_desc = "The model precision for facial landmarks detection model. Default=FP32"
+    facial_model_desc = "The name of the facial landmarks detection model in the subfolder " \
+                        "./models/intel/<facialModel>/<facialPrecision>/<facialModel_desc>.extensions. " \
+                        "Default=landmarks-regression-retail-0009 "
+    facial_precision_desc = "The model precision for facial landmarks detection model. Default=FP32"
 
-    headModel_desc = "The path to the head pose estimation model in the subfolder ./models/intel/<headModel>/<headPrecision>/<headModel>.extensions. Default=head-pose-estimation-adas-0001"
-    headPrecision_desc = "The model precision for head pose estimation model. Default=FP32"
+    head_model_desc = "The path to the head pose estimation model in the subfolder " \
+                      "./models/intel/<headModel>/<headPrecision>/<headModel>.extensions. " \
+                      "Default=head-pose-estimation-adas-0001 "
+    head_precision_desc = "The model precision for head pose estimation model. Default=FP32"
 
-    gazeModel_desc = "The path to the gaze estimation model in the subfolder ./models/intel/<gazeModel>/<gazePrecision>/<gazeModel>.extensions. Default=gaze-estimation-adas-0002"
-    gazePrecision_desc = "The model precision for gaze estimation model. Default=FP32"
+    gaze_model_desc = "The path to the gaze estimation model in the subfolder " \
+                      "./models/intel/<gazeModel>/<gazePrecision>/<gazeModel>.extensions. " \
+                      "Default=gaze-estimation-adas-0002 "
+    gaze_precision_desc = "The model precision for gaze estimation model. Default=FP32"
+
+    gui_desc = "Set to True to activate the graphic user interface (gui). Default=False."
 
     # create the arguments
-    parser.add_argument("-i", "--input", help=i_desc, default="../bin/demo.mp4", required=False)
+    parser.add_argument("-i", "--input", help=i_desc, default="/bin/demo.mp4", required=False)
     parser.add_argument("-d", "--device", help=d_desc, default="CPU", required=False)
 
-    parser.add_argument("-modelSource", help=modelSource_desc, default="intel", required=False)
+    parser.add_argument("-modelSource", help=model_source_desc, default="intel", required=False)
 
-    parser.add_argument("-faceModel", help=faceModel_desc, default="face-detection-adas-binary-0001", required=False)
-    parser.add_argument("-facePrecision", help=facePrecision_desc, default="FP32-INT1", required=False)
+    parser.add_argument("-faceModel", help=face_model_desc, default="face-detection-adas-binary-0001", required=False)
+    parser.add_argument("-facePrecision", help=face_precision_desc, default="FP32-INT1", required=False)
 
-    parser.add_argument("-facialModel", help=facialModel_desc, default="landmarks-regression-retail-0009",
+    parser.add_argument("-facialModel", help=facial_model_desc, default="landmarks-regression-retail-0009",
                         required=False)
-    parser.add_argument("-facialPrecision", help=facialPrecision_desc, default="FP32", required=False)
+    parser.add_argument("-facialPrecision", help=facial_precision_desc, default="FP32", required=False)
 
-    parser.add_argument("-headModel", help=headModel_desc, default="head-pose-estimation-adas-0001", required=False)
-    parser.add_argument("-headPrecision", help=headPrecision_desc, default="FP32", required=False)
+    parser.add_argument("-headModel", help=head_model_desc, default="head-pose-estimation-adas-0001", required=False)
+    parser.add_argument("-headPrecision", help=head_precision_desc, default="FP32", required=False)
 
-    parser.add_argument("-gazeModel", help=gazeModel_desc, default="gaze-estimation-adas-0002", required=False)
-    parser.add_argument("-gazePrecision", help=gazePrecision_desc, default="FP32", required=False)
+    parser.add_argument("-gazeModel", help=gaze_model_desc, default="gaze-estimation-adas-0002", required=False)
+    parser.add_argument("-gazePrecision", help=gaze_precision_desc, default="FP32", required=False)
+
+    parser.add_argument("-g", "--gui", help=gui_desc, default=False, required=False)
 
     args = parser.parse_args()
 
@@ -80,12 +94,11 @@ def get_args():
 
 
 def main():
+    project_path = Path(__file__).parent.parent.resolve()
     # This will initiate two loggers that write to ../log/main.log, and /benchmark.log
     loggers = LogHelper()
     # Arguments from user
     args = get_args()
-
-    # ? deal with extensions=None and something is needed ?
 
     # Initialize model classes
     model_face = FaceDetection(model_source=args.modelSource, model_name=args.faceModel,
@@ -109,7 +122,6 @@ def main():
     # input/output processing
     # model inference time
 
-
     # Load models
     start_time = time.time()
     model_face.load_model()
@@ -128,7 +140,7 @@ def main():
     loggers.benchmark.info("Gaze;model_load_time;{}".format(time.time()-start_time))
 
     # read input
-    feed = InputFeeder(input_type='video', input_file=args.input)  # InputFeeder(input_type='cam')
+    feed = InputFeeder(input_type='video', input_file=str(project_path) + args.input)  # InputFeeder(input_type='cam')
     feed.load_data()
     if not (feed.cap.isOpened()):
         loggers.main.critical("Could not open input device ({}). Exiting now...".format(feed.input_type))
@@ -138,6 +150,8 @@ def main():
     height = int(feed.cap.get(4))
 
     for batch in feed.next_batch():
+        if batch is None:
+            break
         '''
         INFERENCE
         '''
@@ -198,15 +212,19 @@ def main():
             '''
 
             # gaze
-
+            '''
             batch_gaze = batch.copy()
             only_gaze_image = model_gaze.draw_output_on_frame(batch_gaze, facial_coords, face_coords, face_image_cropped)
             cv2.imshow("only gaze", only_gaze_image)
-            ''' '''
+            '''
+
+        if cv2.waitKey(60) == 27:
+            break
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
     feed.close()
+    cv2.destroyAllWindows()
 
 if __name__ == '__main__':
     main()

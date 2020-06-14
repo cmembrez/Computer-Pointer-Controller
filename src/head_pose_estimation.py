@@ -17,13 +17,12 @@ The head_pose_estimation class has four methods
 
 from openvino.inference_engine import IENetwork, IECore
 import cv2
-import numpy as np
 import math
 import time
+from pathlib import Path
 
-from IntelEdgeAI_IoTDeveloper.starter.utils.tools_image import get_end_point
-from IntelEdgeAI_IoTDeveloper.starter.utils.rotation3d import draw_3d_axes
-from IntelEdgeAI_IoTDeveloper.starter.utils.log_helper import LogHelper
+from utils.rotation3d import draw_3d_axes
+from utils.log_helper import LogHelper
 
 
 class HeadPoseEstimation:
@@ -49,6 +48,11 @@ class HeadPoseEstimation:
         self.extensions = extensions
         self.threshold = threshold
 
+        self.input_name = None
+        self.input_shape = None
+        self.outputs_names = None
+        self.outputs_shapes = None
+
         if self.extensions is None:
             self.extensions = "/opt/intel/openvino/deployment_tools/inference_engine/lib/intel64/libcpu_extension_sse4.so"
             self.loggers.main.info("HeadPoseEstimation: no extensions provided by user. Trying to add {}".format(self.extensions))
@@ -59,7 +63,8 @@ class HeadPoseEstimation:
         If the model requires any Plugins, this is where they are loaded.
         """
         # load intermediate representation (IR) files into related class
-        model_path = "../models/" + self.model_source + "/" + self.model_name + "/" + self.model_precision + "/"
+        project_path = Path(__file__).parent.parent.resolve()
+        model_path = str(project_path) + "/models/" + self.model_source + "/" + self.model_name + "/" + self.model_precision + "/"
         model_xml = model_path + self.model_name + ".xml"
         model_bin = model_path + self.model_name + ".bin"
 

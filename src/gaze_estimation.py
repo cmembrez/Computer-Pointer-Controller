@@ -16,7 +16,8 @@ The head_pose_estimation class has five methods
 from openvino.inference_engine import IENetwork, IECore
 import cv2
 import time
-from IntelEdgeAI_IoTDeveloper.starter.utils.log_helper import LogHelper
+from pathlib import Path
+from utils.log_helper import LogHelper
 
 class GazeEstimation:
     '''
@@ -57,7 +58,8 @@ class GazeEstimation:
         If the model requires any Plugins, this is where they are loaded.
         """
         # load intermediate representation (IR) files into related class
-        model_path = "../models/" + self.model_source + "/" + self.model_name + "/" + self.model_precision + "/"
+        project_path = Path(__file__).parent.parent.resolve()
+        model_path = str(project_path) + "/models/" + self.model_source + "/" + self.model_name + "/" + self.model_precision + "/"
         model_xml = model_path + self.model_name + ".xml"
         model_bin = model_path + self.model_name + ".bin"
 
