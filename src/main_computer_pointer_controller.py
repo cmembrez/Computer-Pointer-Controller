@@ -67,7 +67,8 @@ def get_args():
                       "Default=gaze-estimation-adas-0002 "
     gaze_precision_desc = "The model precision for gaze estimation model. Default=FP32"
 
-    gui_desc = "Set to True to activate the graphic user interface (GUI). Default=False."
+    output_show_desc = "a string to show single output for 'face', 'facial', 'head' or 'gaze'. " \
+                       "Also possible 'faceFacial'. Default='' for no output."
 
     # create the arguments
     parser.add_argument("-itype", "--inputtype", help=itype_desc, default='cam', required=False)
@@ -89,7 +90,7 @@ def get_args():
     parser.add_argument("-gazeModel", help=gaze_model_desc, default="gaze-estimation-adas-0002", required=False)
     parser.add_argument("-gazePrecision", help=gaze_precision_desc, default="FP32", required=False)
 
-    parser.add_argument("-g", "--gui", help=gui_desc, default=False, required=False)
+    parser.add_argument("-o", "--outputShow", help=output_show_desc, default="", required=False)
 
     args = parser.parse_args()
 
@@ -102,7 +103,7 @@ def main():
     # Arguments from user
     args = get_args()
 
-    # Initialize model classes
+    # Initialize models and mouse classes
     model_face = FaceDetection(model_source=args.modelSource, model_name=args.faceModel,
                                model_precision=args.facePrecision, device=args.device, extensions=None, threshold=0.5)
     model_facial = FacialLandmarks(model_source=args.modelSource, model_name=args.facialModel,
@@ -114,16 +115,11 @@ def main():
     model_gaze = GazeEstimation(model_source=args.modelSource, model_name=args.gazeModel,
                                 model_precision=args.gazePrecision, device=args.device, extensions=None,
                                 threshold=0.5)
-
-    mouse_precision = 'high'
-    mouse_speed = 'fast'
+    mouse_precision = 'low'
+    mouse_speed = 'slow'
     mouse_controller = MouseController(mouse_precision, mouse_speed)
 
-    # TIMER
-    # model loading time
-    # input/output processing
-    # model inference time
-    # log the model name and precision
+    # Log benchmark: start with models' name and precision
     loggers.benchmark.info("Face;{};{}".format(args.faceModel, args.facePrecision))
     loggers.benchmark.info("Facial;{};{}".format(args.facialModel, args.facialPrecision))
     loggers.benchmark.info("Head;{};{}".format(args.headModel, args.headPrecision))
@@ -189,49 +185,40 @@ def main():
                     loggers.main.info("main_computer_pointer_controller: exit on mouse controller move!")
                     sys.exit()
 
-
-
             '''
-            SHOW OUTPUTS TO USER: uncomment the desired section (i.e. remove ''' ''') 
+            SHOW OUTPUTS TO USER
             '''
-            # face
-            '''
-            cv2.imshow("original", batch)
-            cv2.imshow("face only", batch_face)
-            '''
-
-            # facial landmarks
-            '''
-            batch_facial = batch.copy()
-            face_facial_image = model_facial.draw_output_on_frame(batch_face, face_image_cropped, face_coords)
-            cv2.imshow("face + facial landmarks", face_facial_image)
-            only_facial_image = model_facial.draw_output_on_frame(batch_facial, face_image_cropped, face_coords)
-            cv2.imshow("only facial landmarks", only_facial_image)
-            full_facial_image = model_facial.draw_nose_lips_on_frame(only_facial_image, face_image_cropped, face_coords)
-            cv2.imshow("all facial landmarks", full_facial_image)
-            '''
-
-            # head pose
-            '''
-            batch_head = batch.copy()
-            only_head_image = model_head.draw_output_on_frame(batch_head, face_coords)
-            cv2.imshow("only head pose", only_head_image)
-            '''
-
-            # gaze
-            '''
-            batch_gaze = batch.copy()
-            only_gaze_image = model_gaze.draw_output_on_frame(batch_gaze, facial_coords, face_coords, face_image_cropped)
-            cv2.imshow("only gaze", only_gaze_image)
-            '''
+            if args.outputShow == 'face':
+                cv2.imshow("face only", batch_face)
+            if args.outputShow == 'facial':
+                only_facial_image = model_facial.draw_output_on_frame(batch_facial, face_image_cropped, face_coords)
+                cv2.imshow("only facial landmarks", only_facial_image)
+            if args.outputShow == 'head':
+                batch_head = batch.copy()
+                only_head_image = model_head.draw_output_on_frame(batch_head, face_coords)
+                cv2.imshow("only head pose", only_head_image)
+            if args.outputShow == 'gaze':
+                batch_gaze = batch.copy()
+                only_gaze_image = model_gaze.draw_output_on_frame(batch_gaze, facial_coords, face_coords,
+                                                                  face_image_cropped)
+                cv2.imshow("only gaze", only_gaze_image)
+            if args.outputShow == 'faceFacial':
+                face_facial_image = model_facial.draw_output_on_frame(batch_face, face_image_cropped, face_coords)
+                cv2.imshow("face + facial landmarks", face_facial_image)
+            if args.outputShow == 'allFacial':
+                batch_facial = batch.copy()
+                only_facial_image = model_facial.draw_output_on_frame(batch_facial, face_image_cropped, face_coords)
+                full_facial_image = model_facial.draw_nose_lips_on_frame(only_facial_image, face_image_cropped,
+                                                                         face_coords)
+                cv2.imshow("all facial landmarks", full_facial_image)
 
         if cv2.waitKey(60) == 27:
             break
-
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
     feed.close()
     cv2.destroyAllWindows()
+
 
 if __name__ == '__main__':
     main()

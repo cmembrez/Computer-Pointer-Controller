@@ -17,6 +17,7 @@ import openvino
 from openvino.inference_engine import IENetwork, IECore
 import cv2
 import time
+import pprint
 from pathlib import Path
 from utils.log_helper import LogHelper
 
@@ -29,6 +30,7 @@ class GazeEstimation:
         Set instance variables.
         '''
         self.loggers = LogHelper()
+        self.logLayers = True  # enables the layers.log once per model
 
         self.plugin = None
         self.network = None
@@ -69,7 +71,7 @@ class GazeEstimation:
         except Exception as e:
             self.loggers.main.error("GazeEstimation: could not initialize the network. "
                           "Please check path to model. Exclude extensions (.xml, .bin).")
-            print("Ced's printing: ", e)
+            print(e)
             exit(1)
 
         # Get names and shapes
@@ -120,6 +122,11 @@ class GazeEstimation:
         results = self.net_plugin.infer(input_dict)
         self.loggers.benchmark.info("Gaze;inference_time;{}".format(time.time() - start_time))
 
+        if self.logLayers:
+            pp = pprint.PrettyPrinter(indent=4)
+            self.loggers.layers.info("Gaze;" + pp.pformat(self.net_plugin.requests[0].get_perf_counts()))
+            self.logLayers = False # one log per model to avoid a large layers.log file.
+
         outputs_detections = results[self.outputs_names[0]]
         # Preproces OUTPUT
         start_time = time.time()
@@ -159,7 +166,7 @@ class GazeEstimation:
                 exit(1)
         except Exception as e:
             self.loggers.main.error("GazeEstimation: problem with extensions provided. Please re-check info provided.")
-            print("Ced's printing: ", e)
+            print(e)
             exit(1)
 
     def preprocess_input(self, image):
@@ -183,7 +190,7 @@ class GazeEstimation:
         except Exception as e:
             self.loggers.main.error("GazeEstimation.preprocess_input(): inputs not conform. "
                           "Current input's shape is {}.".format(self.inputs_shapes))
-            print("Ced's printing: ", e)
+            print(e)
 
             self.loggers.main.debug("Inputs for Gaze estimation not available.")
             self.loggers.main.debug("image[0].shape: {}".format(image_input_preprocessed[0].shape))

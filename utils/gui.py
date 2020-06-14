@@ -1,35 +1,14 @@
-'''
-a Graphical-User-Interface to output webcam with inferences' results and statistics
+"""
+Despite the name, the current class only outputs tables of results.
+"""
 
-With additional buttons and optionality.
-
-'''
-
-import tkinter as tk
-import PIL.Image, PIL.ImageTk
-import cv2
 import numpy as np
-import matplotlib.pyplot as plt
-
 from pathlib import Path
 
 class GuiPointerController:
     def __init__(self):
         # SHOW OUTPUT / GUI
-        window = tk.Tk()
-        cv_img = cv2.imread("../bin/forestPiano.jpeg")
-        height, width, no_channels = cv_img.shape
-
-        canvas = tk.Canvas(window, width=width, height=height)
-        canvas.pack()
-
-        photo = PIL.ImageTk.PhotoImage(image=PIL.Image.fromarray(cv_img))
-        canvas.create_image(0, 0, image=photo, anchor=tk.NW)
-
-        btn_close = tk.Button(window, text="Close Window", width=50, command=window.destroy)
-        btn_close.pack(anchor=tk.CENTER, expand=True)
-
-        # window.mainloop()
+        self.window = None
 
     def analyze_benchmark_log(self):
         """
@@ -64,8 +43,6 @@ class GuiPointerController:
         gaze_output = gaze_data[gaze_data[:, 0] == 'preprocess_output_time', 1:].astype(np.float)
         gaze_inference = gaze_data[gaze_data[:, 0] == 'inference_time', 1:].astype(np.float)
 
-        nb_data_points=len(gaze_inference)
-
         print("(seconds)| load time \t | avg preprocess input \t | inference time \t | avg preprocess output")
         print("face:\t | {} \t\t | {} \t\t\t\t\t | {} \t\t\t | {}".format(face_load, np.mean(face_input).round(4), np.mean(face_inference).round(4),
                                       np.mean(face_output).round(4)))
@@ -77,18 +54,11 @@ class GuiPointerController:
                                       np.mean(gaze_output).round(4)))
         print("-"*100)
 
-        '''
-        plt.plot(face_inference)
-        plt.plot(face_output)
-        plt.plot(face_input)
-        plt.show()
-        '''
-
-
 
 def main():
-    basicGui = GuiPointerController()
-    basicGui.analyze_benchmark_log()
+    basic_gui = GuiPointerController()
+    basic_gui.analyze_benchmark_log()
+
 
 if __name__ == '__main__':
     main()

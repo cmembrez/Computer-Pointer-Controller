@@ -15,6 +15,7 @@ from openvino.inference_engine import IENetwork, IECore
 import cv2
 import time
 from pathlib import Path
+import pprint
 
 from utils.log_helper import LogHelper
 
@@ -28,6 +29,7 @@ class FaceDetection:
         Set Instance Variables
         """
         self.loggers = LogHelper()
+        self.logLayers = True  # enable the layers.log once per model
 
         self.plugin = None
         self.network = None
@@ -67,7 +69,7 @@ class FaceDetection:
             self.network = IENetwork(model=model_xml, weights=model_bin)
         except Exception as e:
             self.loggers.main.error("FaceDetection: could not initialize the network. Please check path to model. Exclude extensions (.xml, .bin).")
-            print("Ced's printing: ", e)
+            print(e)
             exit(1)
 
         # Get names and shapes
@@ -104,6 +106,11 @@ class FaceDetection:
         start_time = time.time()
         results = self.net_plugin.infer(input_dict)
         self.loggers.benchmark.info("Face;inference_time;{}".format(time.time() - start_time))
+
+        if self.logLayers:
+            pp = pprint.PrettyPrinter(indent=4)
+            self.loggers.layers.info("Face;" + pp.pformat(self.net_plugin.requests[0].get_perf_counts()))
+            self.logLayers = False # one log per model to avoid a large layers.log file.
 
         outputs_detections = results[self.output_name]
 
@@ -147,7 +154,7 @@ class FaceDetection:
                 exit(1)
         except Exception as e:
             self.loggers.main.error("FaceDetection: problem with extensions provided. Please re-check info provided.")
-            print("Ced's printing: ", e)
+            print(e)
             exit(1)
 
     def preprocess_input(self, image):
@@ -167,7 +174,7 @@ class FaceDetection:
         except Exception as e:
             self.loggers.main.error("FaceDetection.preprocess_input(): inputs not conform. "
                           "Current input's shape is {}.".format(self.input_shape))
-            print("Ced's printing: ", e)
+            print(e)
             exit(1)
 
         return image_input_preprocessed

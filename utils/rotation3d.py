@@ -52,9 +52,6 @@ def draw_3d_axes(frame, center_of_face, yaw_degree, pitch_degree, roll_degree, s
     zaxis = np.dot(rotation_matrix, zaxis) + zero_matrix
     zaxis1 = np.dot(rotation_matrix, zaxis1) + zero_matrix
 
-    print("np.dot(rotation_matrix, xaxis) + zero_matrix: {}".format(np.dot(rotation_matrix, xaxis) + zero_matrix))
-    print("np.dot(rotation_matrix, xaxis): {}".format(np.dot(rotation_matrix, xaxis)))
-
     '''
     Draw Axis: screen projection
     

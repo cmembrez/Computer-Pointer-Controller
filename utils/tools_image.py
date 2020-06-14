@@ -11,6 +11,7 @@ import numpy as np
 import math
 # from IntelEdgeAI_IoTDeveloper.starter.utils.log_helper import LogHelper
 
+
 def crop_square_from_point(image, square_center, square_reshape_size=60):
     """
     Helper function to crop a squared frame around the detected 'eye' coordinate (x,y). It will serves as input for gaze_estimation.py

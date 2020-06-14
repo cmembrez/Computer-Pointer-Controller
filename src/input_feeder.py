@@ -15,17 +15,17 @@ class InputFeeder:
         """
         self.loggers = LogHelper()
 
-        self.input_type=input_type
-        if input_type=='video' or input_type=='image':
-            self.input_file=input_file
+        self.input_type = input_type
+        if input_type == 'video' or input_type == 'image':
+            self.input_file = input_file
 
         self.cap = None
-    
+
     def load_data(self):
         try:
             if self.input_type == 'video':
                 self.cap = cv2.VideoCapture(self.input_file)
-            elif self.input_type=='cam':
+            elif self.input_type == 'cam':
                 self.cap = cv2.VideoCapture(0)
             else:
                 self.cap = cv2.imread(self.input_file)
@@ -40,13 +40,12 @@ class InputFeeder:
         """
         while True:
             for _ in range(5):  # for range(x), x "is like a batch size"
-                _, frame=self.cap.read()
+                _, frame = self.cap.read()
             yield frame
 
     def close(self):
         """
         Closes the VideoCapture.
         """
-        if not self.input_type=='image':
+        if not self.input_type == 'image':
             self.cap.release()
-

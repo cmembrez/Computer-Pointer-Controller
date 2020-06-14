@@ -20,6 +20,7 @@ import cv2
 import math
 import time
 from pathlib import Path
+import pprint
 
 from utils.rotation3d import draw_3d_axes
 from utils.log_helper import LogHelper
@@ -34,6 +35,7 @@ class HeadPoseEstimation:
         Set instance variables.
         """
         self.loggers = LogHelper()
+        self.logLayers = True  # enables the layers.log once per model
 
         self.plugin = None
         self.network = None
@@ -73,7 +75,7 @@ class HeadPoseEstimation:
         except Exception as e:
             self.loggers.main.error("HeadPoseEstimation: could not initialize the network. "
                           "Please check path to model. Exclude extensions (.xml, .bin).")
-            print("Ced's printing: ", e)
+            print(e)
             exit(1)
 
         # Get names and shapes
@@ -121,6 +123,11 @@ class HeadPoseEstimation:
         results = self.net_plugin.infer(input_dict)
         self.loggers.benchmark.info("HeadPose;inference_time;{}".format(time.time() - start_time))
 
+        if self.logLayers:
+            pp = pprint.PrettyPrinter(indent=4)
+            self.loggers.layers.info("HeadPose;" + pp.pformat(self.net_plugin.requests[0].get_perf_counts()))
+            self.logLayers = False # one log per model to avoid a large layers.log file.
+
         # Preproces OUTPUT
         start_time = time.time()
         coords = self.preprocess_output(results)
@@ -162,7 +169,7 @@ class HeadPoseEstimation:
         except Exception as e:
             self.loggers.main.error(
                 "HeadPoseEstimation: problem with extensions provided. Please re-check info provided.")
-            print("Ced's printing: ", e)
+            print(e)
             exit(1)
 
     def preprocess_input(self, image):
@@ -180,7 +187,7 @@ class HeadPoseEstimation:
         except Exception as e:
             self.loggers.main.error("HeadPoseEstimation.preprocess_input(): inputs not conform. "
                           "Current input's shape is {}.".format(self.input_shape))
-            print("Ced's printing: ", e)
+            print(e)
             exit(1)
 
         return image_input_preprocessed
@@ -216,29 +223,6 @@ class HeadPoseEstimation:
         y0 = int((face_coords[0][1] + face_coords[0][3]) / 2)
         head_output_frame = input_frame.copy()
 
-        '''
-        old way -- wrong??
-        
-        # YAW (Z-axis)
-        yaw_xy = get_end_point([x0, y0], self.coords_accepted[0], length)
-        cv2.arrowedLine(head_output_frame, (x0, y0), (yaw_xy[0], yaw_xy[1]), (0, 0, 255), thickness=2)
-
-        # PITCH (Y-axis)
-        pitch_xy = get_end_point([x0, y0], self.coords_accepted[1], length)
-        cv2.arrowedLine(head_output_frame, (x0, y0), (pitch_xy[0], pitch_xy[1]), (255, 0, 0), thickness=2)
-
-        # ROLL (X-axis)
-        roll_xy = get_end_point([x0, y0], self.coords_accepted[2], length)
-        cv2.arrowedLine(head_output_frame, (x0, y0), (roll_xy[0], roll_xy[1]), (0, 255, 0), thickness=2)
-        '''
-
-        '''
-        still in working progress
-        '''
-        fov = 1 / math.tan(70/2)  # 50 degree angle?
-        wd = 45  # working distance = 45mm
-
-        # is the focal length in terms of pixels? or in terms of distance? latter case, need to multiply by scale
         focal_length = 25  # approximate the focal length as the distance from the lens to the image, in mm
         scale = 50  # scale factor relating pixels to distance
 
