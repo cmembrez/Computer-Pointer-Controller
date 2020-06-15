@@ -5,11 +5,11 @@ The current application will estimate the gaze of the user, and the gaze's coord
 To estimate the gaze of the user, the application reads an input (webcam, video) and uses an inference pipeline of four pre-trained models.
 
 ## Project Set Up and Installation
-* You will need to have Intel OpenVINO toolkit installed (version >= 2020.1), please refer to their official [link]( https://docs.openvinotoolkit.org/latest/index.html)
+Before going any further, Intel OpenVINO toolkit is required (version >= 2020.1), please refer to their official [link]( https://docs.openvinotoolkit.org/latest/index.html)
 
-* You can start by cloning the current respository: git clone www.github.com/cmembrez/computer_pointer_controller
-* See below section on 'how to install the dependencies'.
-* Place four models in the ./models folder. You can download pre-trained models from Intel OpenVINO resources.
+*Then, you can git clone this repo: git clone www.github.com/cmembrez/computer_pointer_controller
+*Next, check the dependencies section below on 'how to install the dependencies'.
+*Afterwards, you can download your own models in the ./models folder or use the ones provided here.
 * Finally, in a terminal, run the bash script test_simple.sh.
 
 Please refer to the './log' folder for logging information. Please note that they are reset at each new launch:
