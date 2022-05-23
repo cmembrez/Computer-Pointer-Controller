@@ -187,7 +187,7 @@ In terms of hardware, the application has only been tested on a CPU. The next st
 
 Except for face's model which come in one precision only, all other models show a relative drop in inference time
 when I change the precision from FP32 to FP16. The drop in accuracy hasn't been recorded.
-Interested reader can refer to OpenVINO's performance information at this [link](docs.openvinotoolkit.org/latest/_docs_performance_int8_vs_fp32.html)
+Interested reader can refer to OpenVINO's performance information at this [link](https://docs.openvino.ai/latest/openvino_docs_performance_int8_vs_fp32.html)
 
 One example from results.txt with Face in FP32-INT1, FP32-INT8 for all:
 
